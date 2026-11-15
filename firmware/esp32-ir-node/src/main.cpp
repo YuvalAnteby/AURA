@@ -1,51 +1,26 @@
 #include <Arduino.h>
-#include <IRrecv.h>
-#include <IRutils.h>
+#include <IRsend.h>
 
 #include "config/Pins.h"
 
-constexpr uint16_t CAPTURE_BUFFER_SIZE = 1024;
-constexpr uint8_t CAPTURE_TIMEOUT_MS = 50;
-
-IRrecv irReceiver(
-    Pins::IR_RECEIVER,
-    CAPTURE_BUFFER_SIZE,
-    CAPTURE_TIMEOUT_MS,
-    true
-);
-
-decode_results results;
+IRsend irSender(Pins::IR_TRANSMITTER);
 
 void setup() {
     Serial.begin(115200);
     delay(1000);
 
     Serial.println();
-    Serial.println("AURA - IR receiver diagnostic");
-    Serial.println("Waiting for IR signals...");
+    Serial.println("AURA - NEC replay test");
 
-    irReceiver.enableIRIn();
+    irSender.begin();
+
+    Serial.println("Sending Mute in 3 seconds...");
+    delay(3000);
+
+    irSender.sendNEC(0x8E700FF, 32);
+
+    Serial.println("Mute command sent.");
 }
 
 void loop() {
-    if (!irReceiver.decode(&results)) {
-        return;
-    }
-
-    Serial.println();
-    Serial.println("========== IR SIGNAL ==========");
-
-    Serial.print("Protocol: ");
-    Serial.println(typeToString(results.decode_type));
-
-    Serial.print("Bits: ");
-    Serial.println(results.bits);
-
-    Serial.print("Value: 0x");
-    serialPrintUint64(results.value, HEX);
-    Serial.println();
-
-    Serial.println("===============================");
-
-    irReceiver.resume();
 }
